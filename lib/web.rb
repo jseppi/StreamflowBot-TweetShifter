@@ -23,7 +23,7 @@ class Web < Sinatra::Base
 
   get '/statistics' do
     response = []
-    Statistics.where(:interval.gt => Integer(params[:since] || Time.now.to_i - (Statistics.interval * 10))).asc.each do |doc|
+    Statistics.where(:interval.gt => Integer(params[:since] || Time.now.to_i - (Statistics.interval * 10))).desc(:interval).each do |doc|
       response << [doc.interval.to_i, doc.tweets.to_i]
     end
     JSON.dump(response)
