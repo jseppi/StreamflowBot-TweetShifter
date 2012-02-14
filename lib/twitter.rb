@@ -35,15 +35,17 @@ class Twitter
     tweet[:user_name] = status.user.screen_name
     tweet[:user_id] = status.user.id.to_s
     tweet[:text] = status.text
-    tweet[:retweet] = :default
+    tweet[:type] = :default
 
     if status.in_reply_to_status_id > -1
+      tweet[:type] = :reply
       tweet[:reply_to_id] = status.in_reply_to_status_id.to_s
       tweet[:reply_to_user_name] = status.in_reply_to_screen_name
       tweet[:reply_to_user_id] = status.in_reply_to_user_id.to_s
     end
 
     if status.retweet?
+      tweet[:type] = :retweet
       tweet[:retweet_text] = status.retweeted_status.text
       tweet[:retweet_user_name] = status.retweeted_status.user.screen_name
       tweet[:retweet_user_id] = status.retweeted_status.user.id.to_s
