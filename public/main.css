@@ -1,0 +1,13 @@
+.tweets .tweet {
+    margin-top: 10px;
+}
+
+.tweets .tweet .username{
+    padding: 5px;
+    margin-right: 10px;
+}
+
+.tweets .tweet .date{
+    padding: 5px;
+    margin-right: 10px;
+}

@@ -1,0 +1,37 @@
+<script type="text/javascript">
+  var tweets = null;
+  var last_tweet = 0;
+
+  var handleTweet = function(tweet){
+      var data = $('<div/>');
+      data.addClass('tweet');
+      data.append($('<span/>').addClass('date').addClass('label').html(tweet['created_at']));
+      data.append($('<span/>').addClass('username').addClass('label').addClass('label-success').html(tweet['user_name']));
+      data.append($('<span/>').addClass('text').html(tweet['text']));
+      if(tweet['created_at'] > last_tweet) last_tweet = tweet['created_at'];
+      return data;
+  };
+
+  var loadTweets = function(){
+      var url = '<%= @static_path %>/tweets';
+      if(last_tweet > 0) url += '?since=' + last_tweet;
+      $.getJSON(url, function(data){
+          var tws = $('<div/>');
+          $.each(data, function(i, tweet){
+              tws.append(handleTweet(tweet));
+          });
+          tweets.prepend(tws.html());
+          setTimeout(loadTweets, 2000);
+      });
+
+  };
+
+  $(function(){
+      tweets = $('.tweets');
+      loadTweets();
+  });
+
+</script>
+
+<div class="tweets">
+</div>

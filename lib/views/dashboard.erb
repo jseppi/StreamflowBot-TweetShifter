@@ -1,0 +1,45 @@
+<script type="text/javascript">
+    var chart; // globally available
+    var start = Math.floor((new Date()).getTime() / 1000);
+    var interval = 3600;
+    var lastCheck = start - (start % interval) - (interval * 10);
+
+    $(document).ready(function() {
+        chart = new Highcharts.Chart({
+            chart: {
+                renderTo: 'chart'
+            },
+            title: {
+                text: 'Tweets per hour'
+            },
+            yAxis: {
+                title: '',
+                min: 0
+            },
+            xAxis: {
+                type: 'datetime',
+                title: 'Tweets'
+            },
+            series: [{
+                name: 'Tweets',
+                data: []
+            }]
+        });
+        var getData = function(){
+            var url = '<%= @static_path %>/statistics?since=' + lastCheck;
+            $.getJSON(url, function(data){
+                $.each(data, function(i,data){
+                    var date = new Date(data[0] * 1000).toUTCString();
+                    var point = [date,data[1]];
+                    chart.series[0].addPoint(point, true, chart.series[0].data.length > 10);
+                    if(lastCheck < data[0]){
+                        lastCheck = data[0];
+                    }
+                });
+            });
+        };
+        getData();
+    });
+</script>
+
+<div id="chart"></div>

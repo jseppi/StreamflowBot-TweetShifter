@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>TweetShifter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="OpenShift & Twitter">
+  <meta name="author" content="Marek Jelen">
+
+  <script src="<%= @static_path %>/jquery.js"></script>
+  <script src="<%= @static_path %>/highcharts/highcharts.js"></script>
+  <script src="<%= @static_path %>/bootstrap/js/bootstrap.js"></script>
+
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+
+  <link href="<%= @static_path %>/bootstrap/css/bootstrap.css" rel="stylesheet">
+  <style>
+      body {
+          padding-top: 60px;
+      }
+  </style>
+  <link href="<%= @static_path %>/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+  <link href="<%= @static_path %>/main.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">TweetShifter</a>
+      <div class="nav-collapse">
+        <ul class="nav">
+          <li class="<%= @section == :stream ? 'active' : '' %>"><a href="<%= @static_path %>/">Stream</a></li>
+          <li class="<%= @section == :dashboard ? 'active' : '' %>"><a href="<%= @static_path %>/dashboard">Dashboard</a></li>
+          <li class="<%= @section == :about ? 'active' : '' %>"><a href="<%= @static_path %>/about">About</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+    <%= yield %>
+</div>
+
+</body>
+</html>

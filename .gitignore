@@ -1,0 +1,5 @@
+config/*.rb
+*.war
+.bundle
+.rvmrc
+.idea
