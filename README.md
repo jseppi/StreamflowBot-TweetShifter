@@ -22,7 +22,7 @@ Convert application using warbler into war file. Create account at
 
 then deploy application as regular java web application.
 
-** You will need to add MongoDB into your instance **
+**You will need to add MongoDB into your instance**
 
 ## Coming soon
 
