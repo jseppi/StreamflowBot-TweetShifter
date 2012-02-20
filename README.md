@@ -6,6 +6,8 @@ Data are saved into MongoDB database using Mongoid library.
 
 Web frontend using Sinatra, jQuery, HighCharts and Bootstrap.
 
+Android push notifications ([client application](https://github.com/marekjelen/twitter-jruby-android))
+
 ## How to
 
 Copy config/environment.example to config/development.rb and adjust required parameters.
@@ -27,7 +29,6 @@ then deploy application as regular java web application.
 ## Coming soon
 
 * Clean up all the mess
-* Android push notifications
 * More complex dashboard
 * Archive browsing
 
