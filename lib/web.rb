@@ -21,6 +21,11 @@ class Web < Sinatra::Base
     erb :about
   end
 
+  get '/register' do
+    Registration.find_or_create_by(:registration_id => params[:id])
+    '{}'
+  end
+
   get '/statistics' do
     response = []
     Statistics.where(:interval.gt => Integer(params[:since] || Time.now.to_i - (Statistics.interval * 10))).desc(:interval).each do |doc|
@@ -43,6 +48,10 @@ class Web < Sinatra::Base
       response << { :created_at => doc.created_at.to_i, :user_name => doc.user_name, :text => doc.text}
     end
     JSON.dump(response)
+  end
+
+  get '/oshift-twitter/?' do
+    redirect to('/')
   end
 
 end

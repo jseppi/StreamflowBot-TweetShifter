@@ -45,3 +45,11 @@ class Statistics
   end
 
 end
+
+class Registration
+
+  include Mongoid::Document
+
+  field :registration_id, :type => String
+  
+end

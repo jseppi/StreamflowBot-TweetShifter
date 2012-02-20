@@ -53,6 +53,9 @@ class Twitter
 
     tweet.save
     Statistics.current.inc(:tweets, 1)
+    Registration.all.each do |receiver|
+      C2DM.instance.notify(receiver.registration_id, tweet[:user_name], tweet[:text])
+    end
   end
 
   def onException(exception)

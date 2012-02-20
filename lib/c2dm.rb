@@ -14,14 +14,15 @@ class C2DM
         'service' => 'ac2dm'
     }
     data = self.class.post('https://www.google.com/accounts/ClientLogin', :body => params)
+    puts data
     data = /Auth=([^\n]+)/.match(data)
     @auth = data[1]
   end
 
-  def notify(username, tweet)
+  def notify(id, username, tweet)
     params = {
-        'registration_id' => C2DM_ID,
-        'collapse_key' => '',
+        'registration_id' => id,
+        'collapse_key' => 'tweets',
         'data.username' => username,
         'data.tweet' => tweet
     }
