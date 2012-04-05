@@ -20,8 +20,8 @@ Mongoid.logger = Logger.new($stdout)
 require 'models'
 
 # Mobile development
-require 'c2dm'
-C2DM.instance.auth(C2DM_USER, C2DM_PASS)
+#require 'c2dm'
+#C2DM.instance.auth(C2DM_USER, C2DM_PASS)
 
 # Twitter listener
 require 'twitter'
