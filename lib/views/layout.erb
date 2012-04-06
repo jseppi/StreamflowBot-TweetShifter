@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>TweetShifter</title>
+  <title>StreamflowBot</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="OpenShift & Twitter">
-  <meta name="author" content="Marek Jelen">
+  <meta name="description" content="Twitter bot to tweet USGS discharge">
+  <meta name="author" content="James Seppi (based on work by Marek Jelen)">
 
   <script src="<%= @static_path %>/jquery.js"></script>
   <script src="<%= @static_path %>/highcharts/highcharts.js"></script>
@@ -29,7 +29,7 @@
 <div class="navbar navbar-fixed-top">
   <div class="navbar-inner">
     <div class="container">
-      <a class="brand" href="#">TweetShifter</a>
+      <a class="brand" href="#">StreamflowBot</a>
       <div class="nav-collapse">
         <ul class="nav">
           <li class="<%= @section == :stream ? 'active' : '' %>"><a href="<%= @static_path %>/">Stream</a></li>

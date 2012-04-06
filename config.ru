@@ -5,7 +5,9 @@ require 'rubygems'
 require 'bundler/setup'
 Bundler.require(:default)
 
-ENV['RACK_ENV'] ||= ENV['RAILS_ENV'] ||= 'development'
+#ENV['RACK_ENV'] ||= ENV['RAILS_ENV'] ||= 'development'
+
+ENV['RACK_ENV'] = 'development' #JAS TEST
 
 require File.expand_path("../config/#{ENV['RACK_ENV']}", __FILE__)
 

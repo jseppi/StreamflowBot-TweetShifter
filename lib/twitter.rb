@@ -1,6 +1,7 @@
 require 'jars/twitter4j-core-2.2.5.jar'
 require 'jars/twitter4j-async-2.2.5.jar'
 require 'jars/twitter4j-stream-2.2.5.jar'
+require 'usgs_services'
 
 import 'twitter4j.FilterQuery'
 import 'twitter4j.TwitterStreamFactory'
@@ -27,62 +28,10 @@ class Twitter
     @stream = TwitterStreamFactory.new(self.config).instance
     @stream.addListener(self.new)
     @stream.filter(FilterQuery.new(0, TWITTER_USERS.to_java(:long), TWITTER_KEYWORDS.to_java(:string)))
-
-    
-    #@twitter.updateStatus("I'm up and running (#{Time.now})!")
   end
 
   def initialize
     @twitter = TwitterFactory.new(Twitter.config).instance
-  end
-
-  def get_nwis_iv_response(site_code)
-
-    param_codes = "00060,00065" #discharge (cfs), gage height (feet)
-
-    iv_uri = URI::HTTP.build(
-      :host => "waterservices.usgs.gov",
-      :path => '/nwis/iv/',
-      :query => { 
-        :format => "json",
-        :sites => site_code,
-        :parameterCd => param_codes
-      }.map{|k,v| "#{URI.escape(k.to_s)}=#{URI.escape(v.to_s)}"}.join("&"))
-
-    begin
-      data = Net::HTTP.get_response(iv_uri).body
-      j = JSON.parse(data)
-
-      sitename = j['value']['timeSeries'][0]\
-            ['sourceInfo']['siteName']
-
-      lat = j['value']['timeSeries'][0]\
-          ['sourceInfo']['geoLocation']['geogLocation']['latitude']
-
-      lon = j['value']['timeSeries'][0]\
-          ['sourceInfo']['geoLocation']['geogLocation']['longitude']
-
-      discharge = j['value']['timeSeries'][0]\
-            ['values'][0]['value'][0]['value']
-
-      timestamp = j['value']['timeSeries'][0]\
-            ['values'][0]['value'][0]['dateTime']
-
-      gage_height = j['value']['timeSeries'][1]\
-            ['values'][0]['value'][0]['value']
-
-      return {
-        :sitename => sitename, 
-        :lat => lat,
-        :lon => lon,
-        :discharge => discharge, 
-        :gage_height => gage_height, 
-        :timestamp => timestamp
-      }
-
-    rescue
-       return nil
-    end
   end
 
   include StatusListener
@@ -113,43 +62,67 @@ class Twitter
     end
 
 
-
-    #if status.text contains 8-15 digit number, then try to 
-    if ( /(\d{8,15})/ =~ status.text ) #8-15 digits for USGS site codes
+    #if status.text contains 8-15 digit number, then try to get data
+    if ( /(\d{8,15})/ =~ status.text )
       site_code = $1
-      ans = get_nwis_iv_response(site_code)
+      ans = USGSServices.get_nwis_iv_response(site_code)
 
-      if not ans
-        #site wasn't found OR didn't have both parameters
-        tweet[:response_type] = "ERROR"
-      else
+      if not ans #Service down or something
+        new_status_update = StatusUpdate.new(
+          "@#{status.user.screen_name} There was an error with the USGS service. "+
+          "Please try later (Time: #{Time.now}).")
+        new_status_update.setInReplyToStatusId(status.id)
+        tweet[:response_type] = "ERROR_SERVICE_ERR"
+
+      elsif ans == "NOT_FOUND"  #site not found
+        puts "ERROR - #{site_code} was NOT FOUND"
+
+        new_status_update = StatusUpdate.new(
+          "@#{status.user.screen_name} Site #{site_code} not found. "+
+          "Try with a valid site (see http://goo.gl/TwXa1)")
         
+        new_status_update.setInReplyToStatusId(status.id)
+        tweet[:response_type] = "ERROR_SITE_NOT_FOUND"
+        tweet[:usgs_site_id] = site_code
+
+      else #everything ok
         
         new_status_update = StatusUpdate.new(
-          "@#{status.user.screen_name} Flow at #{ans[:sitename]} (#{site_code}): " +
-          "#{ans[:discharge]} cfs; Stage: #{ans[:gage_height]} ft; Time: #{ans[:timestamp]}")
+          "@#{status.user.screen_name} "+
+            "#{ans[:discharge] ? 'Flow at ' + ans[:sitename] + '(' + site_code + '): ' + 
+              ans[:discharge] + 'cfs; ' \
+              : 'No flow avail; '}" +
+            "Stage: #{ans[:gage_height]} ft; Time: #{ans[:timestamp]}")
         
         new_status_update.setLocation(GeoLocation.new(
           ans[:lat].to_f, ans[:lon].to_f))
         new_status_update.setInReplyToStatusId(status.id)
         new_status_update.setDisplayCoordinates(true)
 
-        begin
-          @twitter.updateStatus(new_status_update)
-          tweet[:responded_to] = true
-          tweet[:usgs_site_id] = ans[:discharge]
-          tweet[:response_type] = "NORMAL"
-
-          puts "Responding to #{status.user.screen_name}'s request for #{ans[:sitename]} in tweet ##{status.id}."
-        rescue Exception=>e
-          #there was an error updating (like maybe it was a repeat status or twitter is down)
-          tweet[:response_type] = "ERROR"
-          puts "ERROR in responding to #{status.user.screen_name}'s request for #{ans[:sitename]} in tweet ##{status.id}."
-          puts e.to_s
-        end
-
-        
+        tweet[:response_type] = "NORMAL"
+        tweet[:usgs_site_id] = site_code
       end
+
+      begin
+        @twitter.updateStatus(new_status_update)
+        tweet[:responded_to] = true
+
+        puts "Responding to #{status.user.screen_name}'s tweet ##{status.id}."
+      rescue Exception=>e
+        #there was an error updating (like maybe it was a repeat status or twitter is down)
+        tweet[:response_type] = "ERROR"
+        puts "ERROR in responding to #{status.user.screen_name}'s tweet ##{status.id}."
+        
+        new_status_update = StatusUpdate.new(
+          "@#{status.user.screen_name} Data for #{site_code} have not changed " +
+          "since your last request.")
+        new_status_update.setInReplyToStatusId(status.id)
+
+        @twitter.updateStatus(new_status_update)
+        tweet[:responded_to] = true
+        tweet[:response_type] = "ERROR_REPEAT"
+      end
+      
 
     end
 
