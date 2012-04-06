@@ -45,7 +45,9 @@ class Web < Sinatra::Base
     end
     response = []
     query.each do |doc|
-      response << { :created_at => doc.created_at.to_i, :user_name => doc.user_name, :text => doc.text}
+      created_at_str = Time.at(doc.created_at.to_i - \
+        Time.at(doc.created_at.to_i).utc_offset).strftime("%Y/%m/%d %l:%M %P UTC")
+      response << { :created_at => doc.created_at.to_i, :user_name => doc.user_name, :text => doc.text, :created_at_str => created_at_str}
     end
     JSON.dump(response)
   end

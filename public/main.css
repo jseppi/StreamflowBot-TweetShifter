@@ -11,3 +11,7 @@
     padding: 5px;
     margin-right: 10px;
 }
+
+.username a, .username a:hover {
+	color:white;
+}

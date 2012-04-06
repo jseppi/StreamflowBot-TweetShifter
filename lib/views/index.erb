@@ -5,8 +5,9 @@
   var handleTweet = function(tweet){
       var data = $('<div/>');
       data.addClass('tweet');
-      data.append($('<span/>').addClass('date').addClass('label').html(tweet['created_at']));
-      data.append($('<span/>').addClass('username').addClass('label').addClass('label-success').html(tweet['user_name']));
+      data.append($('<span/>').addClass('date').addClass('label').html(tweet['created_at_str']));
+      data.append($('<span/>').addClass('username').addClass('label').addClass('label-success').html(
+        '<a href="http://www.twitter.com/'+tweet['user_name']+'">@'+tweet['user_name']+'</a>'));
       data.append($('<span/>').addClass('text').html(tweet['text']));
       if(tweet['created_at'] > last_tweet) last_tweet = tweet['created_at'];
       return data;

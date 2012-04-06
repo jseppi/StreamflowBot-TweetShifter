@@ -89,7 +89,7 @@ class Twitter
           
           new_status_update = StatusUpdate.new(
             "@#{status.user.screen_name} "+
-              "#{ans[:discharge] ? 'Flow at ' + ans[:sitename] + '(' + site_code + '): ' + 
+              "#{ans[:discharge] ? 'Flow at ' + ans[:sitename] + ' (' + site_code + '): ' + 
                 ans[:discharge] + 'cfs; ' \
                 : 'No flow avail; '}" +
               "Stage: #{ans[:gage_height]} ft; Time: #{ans[:timestamp]}")

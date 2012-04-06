@@ -14,6 +14,8 @@
   <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
 
   <link href="<%= @static_path %>/bootstrap/css/bootstrap.css" rel="stylesheet">
+  <link rel="shortcut icon" type="image/x-icon" href="<%= @static_path %>/favicon.ico">
+
   <style>
       body {
           padding-top: 60px;
@@ -29,7 +31,7 @@
 <div class="navbar navbar-fixed-top">
   <div class="navbar-inner">
     <div class="container">
-      <a class="brand" href="#">StreamflowBot</a>
+      <a class="brand" href="http://www.twitter.com/StreamflowBot">@StreamflowBot</a>
       <div class="nav-collapse">
         <ul class="nav">
           <li class="<%= @section == :stream ? 'active' : '' %>"><a href="<%= @static_path %>/">Stream</a></li>
