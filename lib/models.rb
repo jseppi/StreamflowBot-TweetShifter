@@ -20,6 +20,10 @@ class Tweet
   field :retweet_user_name, :type => String
   field :retweet_user_id, :type => Integer
 
+  field :responded_to, :type => Boolean
+  field :usgs_site_id, :type => String
+  field :response_type, :type => String
+
 
 end
 
