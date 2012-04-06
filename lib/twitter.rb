@@ -62,80 +62,82 @@ class Twitter
       tweet[:retweet_user_id] = status.retweeted_status.user.id.to_s
     end
 
-    #if status.text contains 8-15 digit number, then try to get data
-    if ( /(\d{8,15})/ =~ status.text )
-      site_code = $1
-      ans = USGSServices.get_nwis_iv_response(site_code)
+    if not status.retweet #ignore if it is a retweet
 
-      if not ans #Service down or something
-        new_status_update = StatusUpdate.new(
-          "@#{status.user.screen_name} There was an error with the USGS service. "+
-          "Please try later (Time: #{Time.now}).")
-        new_status_update.setInReplyToStatusId(status.id)
-        tweet[:response_type] = "ERROR_SERVICE_ERR"
+      if ( /(\d{8,15})/ =~ status.text ) #if status.text contains 8-15 digit number, then try to get data
+        site_code = $1
+        ans = USGSServices.get_nwis_iv_response(site_code)
 
-      elsif ans == "NOT_FOUND"  #site not found
-        puts "ERROR - #{site_code} was NOT FOUND"
+        if not ans #Service down or something
+          new_status_update = StatusUpdate.new(
+            "@#{status.user.screen_name} There was an error with the USGS service. "+
+            "Please try later (Time: #{Time.now}).")
+          new_status_update.setInReplyToStatusId(status.id)
+          tweet[:response_type] = "ERROR_SERVICE_ERR"
 
-        new_status_update = StatusUpdate.new(
-          "@#{status.user.screen_name} Site #{site_code} not found. "+
-          "Try with a valid site (see http://goo.gl/TwXa1)")
+        elsif ans == "NOT_FOUND"  #site not found
+          puts "ERROR - #{site_code} was NOT FOUND"
+
+          new_status_update = StatusUpdate.new(
+            "@#{status.user.screen_name} Site #{site_code} not found. "+
+            "Try with a valid site (see http://goo.gl/TwXa1)")
+          
+          new_status_update.setInReplyToStatusId(status.id)
+          tweet[:response_type] = "ERROR_SITE_NOT_FOUND"
+
+        else #everything ok
+          
+          new_status_update = StatusUpdate.new(
+            "@#{status.user.screen_name} "+
+              "#{ans[:discharge] ? 'Flow at ' + ans[:sitename] + '(' + site_code + '): ' + 
+                ans[:discharge] + 'cfs; ' \
+                : 'No flow avail; '}" +
+              "Stage: #{ans[:gage_height]} ft; Time: #{ans[:timestamp]}")
+          
+          new_status_update.setLocation(GeoLocation.new(
+            ans[:lat].to_f, ans[:lon].to_f))
+          new_status_update.setInReplyToStatusId(status.id)
+          new_status_update.setDisplayCoordinates(true)
+
+          tweet[:response_type] = "NORMAL"
+          tweet[:usgs_site_id] = site_code
+        end
+
+        begin
+          @twitter.updateStatus(new_status_update)
+          tweet[:responded_to] = true
+
+          puts "Responding to #{status.user.screen_name}'s tweet ##{status.id}."
         
-        new_status_update.setInReplyToStatusId(status.id)
-        tweet[:response_type] = "ERROR_SITE_NOT_FOUND"
+        rescue Exception=>e
+          #there was an error updating (like maybe it was a repeat status or twitter is down)
+          puts "ERROR in responding to #{status.user.screen_name}'s tweet ##{status.id}."
+          
+          new_status_update = StatusUpdate.new(
+            "@#{status.user.screen_name} Data for #{site_code} have not changed " +
+            "since your last request.")
+          new_status_update.setInReplyToStatusId(status.id)
 
-      else #everything ok
-        
-        new_status_update = StatusUpdate.new(
-          "@#{status.user.screen_name} "+
-            "#{ans[:discharge] ? 'Flow at ' + ans[:sitename] + '(' + site_code + '): ' + 
-              ans[:discharge] + 'cfs; ' \
-              : 'No flow avail; '}" +
-            "Stage: #{ans[:gage_height]} ft; Time: #{ans[:timestamp]}")
-        
-        new_status_update.setLocation(GeoLocation.new(
-          ans[:lat].to_f, ans[:lon].to_f))
-        new_status_update.setInReplyToStatusId(status.id)
-        new_status_update.setDisplayCoordinates(true)
+          @twitter.updateStatus(new_status_update)
+          tweet[:responded_to] = true
+          tweet[:response_type] = "ERROR_REPEAT"
+        end
 
-        tweet[:response_type] = "NORMAL"
-        tweet[:usgs_site_id] = site_code
-      end
+      else #No site code -- send usage info
 
-      begin
-        @twitter.updateStatus(new_status_update)
-        tweet[:responded_to] = true
-
-        puts "Responding to #{status.user.screen_name}'s tweet ##{status.id}."
-      
-      rescue Exception=>e
-        #there was an error updating (like maybe it was a repeat status or twitter is down)
-        puts "ERROR in responding to #{status.user.screen_name}'s tweet ##{status.id}."
-        
-        new_status_update = StatusUpdate.new(
-          "@#{status.user.screen_name} Data for #{site_code} have not changed " +
-          "since your last request.")
-        new_status_update.setInReplyToStatusId(status.id)
-
-        @twitter.updateStatus(new_status_update)
-        tweet[:responded_to] = true
-        tweet[:response_type] = "ERROR_REPEAT"
-      end
-
-    else #No site code -- send usage info
-
-      begin
-        new_status_update = StatusUpdate.new(
-            "@#{status.user.screen_name} Send me a USGS Site ID to get flow data. " +
-            "See http://goo.gl/TwXa1 for sites.")
-        new_status_update.setInReplyToStatusId(status.id)
-        @twitter.updateStatus(new_status_update)
-        tweet[:responded_to] = true
-        tweet[:response_type] = "ERROR_NO_SITE_CODE"
-      rescue
-        #do nothing
-      end
-    end
+        begin
+          new_status_update = StatusUpdate.new(
+              "@#{status.user.screen_name} Send me a USGS Site ID to get flow data. " +
+              "See http://goo.gl/TwXa1 for sites.")
+          new_status_update.setInReplyToStatusId(status.id)
+          @twitter.updateStatus(new_status_update)
+          tweet[:responded_to] = true
+          tweet[:response_type] = "ERROR_NO_SITE_CODE"
+        rescue
+          #do nothing
+        end
+      end #end else
+    end #end if not status.retweet
 
     tweet.save
     Statistics.current.inc(:tweets, 1)
