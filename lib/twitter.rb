@@ -46,6 +46,7 @@ class Twitter
     tweet[:user_id] = status.user.id.to_s
     tweet[:text] = status.text
     tweet[:type] = :default
+    tweet[:responded_to] = false
 
     if status.in_reply_to_status_id > -1
       tweet[:type] = :reply
@@ -106,6 +107,7 @@ class Twitter
         tweet[:responded_to] = true
 
         puts "Responding to #{status.user.screen_name}'s tweet ##{status.id}."
+      
       rescue Exception=>e
         #there was an error updating (like maybe it was a repeat status or twitter is down)
         puts "ERROR in responding to #{status.user.screen_name}'s tweet ##{status.id}."
@@ -122,13 +124,17 @@ class Twitter
 
     else #No site code -- send usage info
 
-      new_status_update = StatusUpdate.new(
-          "@#{status.user.screen_name} Send me a USGS Site ID to get flow data. " +
-          "See http://goo.gl/TwXa1 (Time: #{Time.now})")
-      new_status_update.setInReplyToStatusId(status.id)
-      @twitter.updateStatus(new_status_update)
-      tweet[:responded_to] = true
-      tweet[:response_type] = "ERROR_NO_SITE_CODE"
+      begin
+        new_status_update = StatusUpdate.new(
+            "@#{status.user.screen_name} Send me a USGS Site ID to get flow data. " +
+            "See http://goo.gl/TwXa1 for sites.")
+        new_status_update.setInReplyToStatusId(status.id)
+        @twitter.updateStatus(new_status_update)
+        tweet[:responded_to] = true
+        tweet[:response_type] = "ERROR_NO_SITE_CODE"
+      rescue
+        #do nothing
+      end
     end
 
     tweet.save
