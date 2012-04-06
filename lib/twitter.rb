@@ -61,7 +61,6 @@ class Twitter
       tweet[:retweet_user_id] = status.retweeted_status.user.id.to_s
     end
 
-
     #if status.text contains 8-15 digit number, then try to get data
     if ( /(\d{8,15})/ =~ status.text )
       site_code = $1
@@ -83,7 +82,6 @@ class Twitter
         
         new_status_update.setInReplyToStatusId(status.id)
         tweet[:response_type] = "ERROR_SITE_NOT_FOUND"
-        tweet[:usgs_site_id] = site_code
 
       else #everything ok
         
@@ -110,7 +108,6 @@ class Twitter
         puts "Responding to #{status.user.screen_name}'s tweet ##{status.id}."
       rescue Exception=>e
         #there was an error updating (like maybe it was a repeat status or twitter is down)
-        tweet[:response_type] = "ERROR"
         puts "ERROR in responding to #{status.user.screen_name}'s tweet ##{status.id}."
         
         new_status_update = StatusUpdate.new(
@@ -122,16 +119,21 @@ class Twitter
         tweet[:responded_to] = true
         tweet[:response_type] = "ERROR_REPEAT"
       end
-      
 
+    else #No site code -- send usage info
+
+      new_status_update = StatusUpdate.new(
+          "@#{status.user.screen_name} Send me a USGS Site ID to get flow data. " +
+          "See http://goo.gl/TwXa1 (Time: #{Time.now})")
+      new_status_update.setInReplyToStatusId(status.id)
+      @twitter.updateStatus(new_status_update)
+      tweet[:responded_to] = true
+      tweet[:response_type] = "ERROR_NO_SITE_CODE"
     end
 
     tweet.save
     Statistics.current.inc(:tweets, 1)
     
-    #Registration.all.each do |receiver|
-    #  C2DM.instance.notify(receiver.registration_id, tweet[:user_name], tweet[:text])
-    #end
   end
 
   def onDeletionNotice(statusDeletionNotice)
