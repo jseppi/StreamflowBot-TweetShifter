@@ -73,7 +73,7 @@ class Twitter
             "@#{status.user.screen_name} There was an error with the USGS service. "+
             "Please try later (Time: #{Time.now}).")
           new_status_update.setInReplyToStatusId(status.id)
-          tweet[:response_type] = "ERROR_SERVICE_ERR"
+          tweet[:response_type] = :ERROR_SERVICE_ERR
 
         elsif ans == "NOT_FOUND"  #site not found
           puts "ERROR - #{site_code} was NOT FOUND"
@@ -83,14 +83,14 @@ class Twitter
             "Try with a valid site (see http://goo.gl/TwXa1)")
           
           new_status_update.setInReplyToStatusId(status.id)
-          tweet[:response_type] = "ERROR_SITE_NOT_FOUND"
+          tweet[:response_type] = :ERROR_SITE_NOT_FOUND
 
         else #everything ok
           
           new_status_update = StatusUpdate.new(
             "@#{status.user.screen_name} "+
               "#{ans[:discharge] ? 'Flow at ' + ans[:sitename] + ' (' + site_code + '): ' + 
-                ans[:discharge] + 'cfs; ' \
+                ans[:discharge] + ' cfs; ' \
                 : 'No flow avail; '}" +
               "Stage: #{ans[:gage_height]} ft; Time: #{ans[:timestamp]}")
           
@@ -99,7 +99,7 @@ class Twitter
           new_status_update.setInReplyToStatusId(status.id)
           new_status_update.setDisplayCoordinates(true)
 
-          tweet[:response_type] = "NORMAL"
+          tweet[:response_type] = :NORMAL
           tweet[:usgs_site_id] = site_code
         end
 
@@ -120,7 +120,7 @@ class Twitter
 
           @twitter.updateStatus(new_status_update)
           tweet[:responded_to] = true
-          tweet[:response_type] = "ERROR_REPEAT"
+          tweet[:response_type] = :ERROR_REPEAT
         end
 
       else #No site code -- send usage info
@@ -132,7 +132,7 @@ class Twitter
           new_status_update.setInReplyToStatusId(status.id)
           @twitter.updateStatus(new_status_update)
           tweet[:responded_to] = true
-          tweet[:response_type] = "ERROR_NO_SITE_CODE"
+          tweet[:response_type] = :ERROR_NO_SITE_CODE
         rescue
           #do nothing
         end
